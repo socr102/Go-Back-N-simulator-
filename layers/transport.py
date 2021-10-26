@@ -60,7 +60,9 @@ class TransportLayer:
 
                 else:
                     if self.application_layer.payload.remaining_bytes==0:
+                        print("Finished!")
                         exit()
+
                     self.status.append("ACK")
                 
             else:
