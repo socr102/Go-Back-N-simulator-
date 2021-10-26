@@ -1,7 +1,7 @@
 from copy import copy
 from secrets import token_bytes
 from threading import Timer
-
+import time
 from config import DROP_CHANCE, CORRUPT_CHANCE, DELAY_CHANCE, DELAY_AMOUNT
 from utils import validate_packet, should
 
@@ -19,7 +19,6 @@ class NetworkLayer:
 
     def send(self, packet):
         # Make sure we only send packets which have valid data in them
-        print("packet",packet.seq,packet.data)
 
         validate_packet(packet)
         packet = copy(packet)
@@ -41,6 +40,7 @@ class NetworkLayer:
             # 'self.transport_layer.from_network(packet)' after DELAY_AMOUNT
             # seconds have passed, from a separate thread. So other packets
             # will arrive in the meantime.
+            time.sleep(DELAY_AMOUNT)
             self.timer_object = Timer(
                 DELAY_AMOUNT, self.transport_layer.from_network, (packet,)
             )

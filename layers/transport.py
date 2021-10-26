@@ -31,7 +31,6 @@ class TransportLayer:
         packet = Packet(binary_data,self.seq)
         # Implement me!
         if self.status[self.seq-1] == "ACK":
-
             if self.seq-self.start > PACKET_FRAME-1:
                 self.start = self.start + PACKET_FRAME
 
@@ -43,21 +42,25 @@ class TransportLayer:
 
                 if state=="drop":
 
-                    self.seq -= 1
-                    self.start  = self.seq
-                    self.application_layer.payload.pos -= self.application_layer.payload.chunk_size
+                    self.application_layer.payload.pos -= self.application_layer.payload.chunk_size*(self.seq-self.start)
+                    self.status = self.status[0:self.start]
+                    self.seq = self.start
+                    print("Resending....")
                     self.application_layer.send_next_packet()
+
 
                 elif state == "delay":
 
-                    self.seq -= 1
-                    self.start  = self.seq
                     self.timer = self.network_layer.timer_object
-                    self.application_layer.payload.pos -= self.application_layer.payload.chunk_size
+                    self.application_layer.payload.pos -= self.application_layer.payload.chunk_size*(self.seq-self.start)
+                    self.status = self.status[0:self.start]
+                    self.seq  = self.start
+                    print("Resending....")
                     self.reset_timer(self.application_layer.send_next_packet)
 
                 else:
-
+                    if self.application_layer.payload.remaining_bytes==0:
+                        exit()
                     self.status.append("ACK")
                 
             else:
@@ -77,14 +80,17 @@ class TransportLayer:
                 break
 
         if flag == True:
+            print("packet",packet.seq,packet.data)
 
             self.application_layer.receive_from_transport(packet.data)
 
         else:
 
-            self.network_layer.recipient.transport_layer.start = self.network_layer.recipient.transport_layer.seq 
 
-            self.network_layer.recipient.transport_layer.application_layer.payload.pos -= self.network_layer.recipient.transport_layer.application_layer.payload.chunk_size
+            self.network_layer.recipient.transport_layer.application_layer.payload.pos -= self.network_layer.recipient.transport_layer.application_layer.payload.chunk_size*(self.network_layer.recipient.transport_layer.seq-self.network_layer.recipient.transport_layer.start+1)
+
+            self.network_layer.recipient.transport_layer.seq = self.network_layer.recipient.transport_layer.start
+
             self.network_layer.recipient.transport_layer.application_layer.send_next_packet()
             self.network_layer.recipient.transport_layer.seq -=1
             

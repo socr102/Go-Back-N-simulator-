@@ -49,4 +49,4 @@ while 1:
 
 
 # Delay in seconds
-DELAY_AMOUNT = 0.5
+DELAY_AMOUNT = 3
